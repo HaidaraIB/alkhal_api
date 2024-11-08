@@ -9,7 +9,6 @@ from api.serializers import UserSerializer
 from base.models import User
 
 
-
 @api_view(["POST"])
 def add_user(request: Request):
     serializer = UserSerializer(data=request.data)
@@ -63,11 +62,11 @@ def update_user_info(request: Request):
 @api_view(["POST"])
 def login(request: Request):
     try:
-        user = get_object_or_404(User, email=request.data["email"])
+        user = get_object_or_404(User, username=request.data["username"])
     except Http404:
         return Response(
             {
-                "message": "Email not found",
+                "message": "Username not found",
             },
             status=status.HTTP_404_NOT_FOUND,
         )
