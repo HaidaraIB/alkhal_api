@@ -74,10 +74,11 @@ def login(request: Request):
     is_password_correct = check_password(request.data["password"], user.password)
 
     if is_password_correct:
-
+        serializer = UserSerializer(data=request.data, instance=user)
         return Response(
             {
                 "message": "User logged in successfully",
+                "user": serializer.data,
             }
         )
     else:
