@@ -49,7 +49,7 @@ def update_user_info(request: Request):
         return Response(
             {
                 "message": "User updated successfully",
-                "user": serializer.data,
+                "me": serializer.data,
             }
         )
     else:
@@ -78,7 +78,7 @@ def login(request: Request):
         return Response(
             {
                 "message": "User logged in successfully",
-                "user": serializer.data,
+                "me": serializer.data,
             }
         )
     else:
