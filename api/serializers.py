@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 
 from django.contrib.auth.hashers import make_password
 
+from base.models import Category, Item, ItemHistory, Transaction, TransactionItem
+
 
 class UserSerializer(serializers.ModelSerializer):
     def validate_password(self, value: str) -> str:
@@ -18,4 +20,38 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        fields = "__all__"
+
+
+class DbUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = "__all__"
+
+
+class ItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = "__all__"
+
+
+class ItemHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItemHistory
+        fields = "__all__"
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = "__all__"
+
+
+class TransactionItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TransactionItem
         fields = "__all__"
