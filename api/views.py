@@ -127,6 +127,26 @@ def get_user(_: Request, user_id: int):
     return Response(serializer.data)
 
 
+@api_view(["GET"])
+def get_db(_: Request, username: str):
+    db_file_content = None
+    db_file_name = f"{username}.db"
+    if default_storage.exists(db_file_name):
+        with default_storage.open(db_file_name, "rb") as f:
+            db_file_content = base64.b64encode(f.read()).decode("utf-8")
+        return Response(
+            {
+                "db": db_file_content,
+            }
+        )
+    return Response(
+        {
+            "message": f"There's no db for the user: {username}",
+        },
+        status=status.HTTP_404_NOT_FOUND,
+    )
+
+
 @api_view(["POST"])
 def upload_db(request: Request):
     serializer = DbUploadSerializer(data=request.data)

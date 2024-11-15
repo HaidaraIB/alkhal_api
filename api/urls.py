@@ -5,6 +5,7 @@ from .views import (
     login,
     get_user,
     upload_db,
+    get_db,
     CategoryListCreateView,
     ItemDetailView,
     CategoryDetailView,
@@ -23,6 +24,7 @@ urlpatterns = [
     path("login/", login, name="login"),
     path("getUser/<user_id>/", get_user, name="get-user"),
     path("uploadDb/", upload_db, name="upload-db"),
+    path("getDb/<username>/", get_db, name="get-db"),
     #######################################
     path(
         "categories/",
