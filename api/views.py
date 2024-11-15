@@ -19,6 +19,7 @@ from api.serializers import (
     TransactionSerializer,
 )
 from base.models import User, Category, Item, ItemHistory, Transaction, TransactionItem
+import os
 
 
 @api_view(["POST"])
@@ -134,9 +135,11 @@ def get_db(_: Request, username: str):
     if default_storage.exists(db_file_name):
         with default_storage.open(db_file_name, "rb") as f:
             db_file_content = base64.b64encode(f.read()).decode("utf-8")
+            original_size = os.path.getsize(default_storage.path(db_file_name))
         return Response(
             {
                 "db": db_file_content,
+                "size": original_size,
             }
         )
     return Response(
