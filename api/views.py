@@ -132,6 +132,12 @@ def upload_db(request: Request):
     serializer = DbUploadSerializer(data=request.data)
     if serializer.is_valid():
         file = serializer.validated_data["file"]
+
+        # Check if the file exists and delete it
+        if default_storage.exists(file.name):
+            default_storage.delete(file.name)
+
+        # Save the new file
         file_name = default_storage.save(file.name, ContentFile(file.read()))
         file_url = default_storage.url(file_name)
 
