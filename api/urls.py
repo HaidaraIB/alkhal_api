@@ -6,6 +6,7 @@ from .views import (
     get_user,
     upload_db,
     get_db,
+    sync_pending_operations,
     CategoryListCreateView,
     ItemDetailView,
     CategoryDetailView,
@@ -25,6 +26,11 @@ urlpatterns = [
     path("getUser/<user_id>/", get_user, name="get-user"),
     path("uploadDb/", upload_db, name="upload-db"),
     path("getDb/<username>/", get_db, name="get-db"),
+    path(
+        "syncPendingOperations/",
+        sync_pending_operations,
+        name="sync-pending-operations",
+    ),
     #######################################
     path(
         "categories/",

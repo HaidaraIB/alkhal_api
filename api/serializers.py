@@ -23,6 +23,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class PendingOperationSerializer(serializers.Serializer):
+    operation = serializers.CharField()
+    table_name = serializers.CharField()
+    record_id = serializers.IntegerField()
+    data = serializers.JSONField()
+
+
 class DbUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
 

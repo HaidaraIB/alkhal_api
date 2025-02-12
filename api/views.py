@@ -17,8 +17,10 @@ from api.serializers import (
     ItemSerializer,
     TransactionItemSerializer,
     TransactionSerializer,
+    PendingOperationSerializer,
 )
 from base.models import User, Category, Item, ItemHistory, Transaction, TransactionItem
+import sqlite3
 import os
 
 
@@ -172,6 +174,68 @@ def upload_db(request: Request):
             },
             status=status.HTTP_201_CREATED,
         )
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
+@api_view(["POST"])
+def sync_pending_operations(request: Request):
+    serializer = PendingOperationSerializer(data=request.data, many=True)
+    if serializer.is_valid():
+        pending_operations = serializer.validated_data
+        username = request.data.get("username")
+
+        # Path to the user's SQLite database on the server
+        db_path = default_storage.path(f"{username}.db")
+
+        # Apply the pending operations to the user's database
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                for operation in pending_operations:
+                    table_name = operation["table_name"]
+                    operation_type = operation["operation"]
+                    record_id = operation["record_id"]
+                    data = operation["data"]
+
+                    if operation_type == "insert":
+                        columns = ", ".join(data.keys())
+                        values = ", ".join([f"'{v}'" for v in data.values()])
+                        query = (
+                            f"INSERT INTO {table_name} ({columns}) VALUES ({values});"
+                        )
+                        cursor.execute(query)
+
+                    elif operation_type == "update":
+                        updates = ", ".join([f"{k} = '{v}'" for k, v in data.items()])
+                        query = (
+                            f"UPDATE {table_name} SET {updates} WHERE id = {record_id};"
+                        )
+                        cursor.execute(query)
+
+                    elif operation_type == "delete":
+                        query = f"DELETE FROM {table_name} WHERE id = {record_id};"
+                        cursor.execute(query)
+
+                conn.commit()
+
+            return Response(
+                {
+                    "message": "Pending operations synced successfully",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
     return Response(
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST,
