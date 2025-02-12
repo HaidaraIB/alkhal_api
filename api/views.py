@@ -182,7 +182,7 @@ def upload_db(request: Request):
 
 @api_view(["POST"])
 def sync_pending_operations(request: Request):
-    serializer = PendingOperationSerializer(data=request.data, many=True)
+    serializer = PendingOperationSerializer(data=request.data.get("operations"), many=True)
     if serializer.is_valid():
         pending_operations = serializer.validated_data
         username = request.data.get("username")
