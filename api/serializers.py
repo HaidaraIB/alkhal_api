@@ -27,7 +27,7 @@ class PendingOperationSerializer(serializers.Serializer):
     operation = serializers.CharField()
     table_name = serializers.CharField()
     record_id = serializers.IntegerField()
-    data = serializers.JSONField()
+    data = serializers.DictField()
 
 
 class DbUploadSerializer(serializers.Serializer):
