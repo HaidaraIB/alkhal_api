@@ -270,6 +270,8 @@ def get_pending_operations(_: Request, username: str):
             # Convert tuples to dictionaries
             pending_operations = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
+            cursor.execute("DELETE FROM pending_operations")
+
         return Response(
             {
                 "operations": pending_operations,
