@@ -7,6 +7,7 @@ from .views import (
     upload_db,
     get_db,
     sync_pending_operations,
+    get_pending_operations,
     CategoryListCreateView,
     ItemDetailView,
     CategoryDetailView,
@@ -30,6 +31,11 @@ urlpatterns = [
         "syncPendingOperations/",
         sync_pending_operations,
         name="sync-pending-operations",
+    ),
+    path(
+        "getPendingOperations/<username>/",
+        get_pending_operations,
+        name="get-pending-operations",
     ),
     #######################################
     path(

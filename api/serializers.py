@@ -24,10 +24,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PendingOperationSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     operation = serializers.CharField()
     table_name = serializers.CharField()
     record_id = serializers.IntegerField()
     data = serializers.DictField()
+    timestamp = serializers.IntegerField()
 
 
 class DbUploadSerializer(serializers.Serializer):

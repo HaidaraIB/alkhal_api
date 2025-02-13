@@ -182,23 +182,37 @@ def upload_db(request: Request):
 
 @api_view(["POST"])
 def sync_pending_operations(request: Request):
-    serializer = PendingOperationSerializer(data=request.data.get("operations"), many=True)
+    serializer = PendingOperationSerializer(
+        data=request.data.get("operations"), many=True
+    )
     if serializer.is_valid():
         pending_operations = serializer.validated_data
         username = request.data.get("username")
-
-        # Path to the user's SQLite database on the server
         db_path = default_storage.path(f"{username}.db")
-
-        # Apply the pending operations to the user's database
         try:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
                 for operation in pending_operations:
+                    pending_operation_id = operation["id"]
                     table_name = operation["table_name"]
                     operation_type = operation["operation"]
                     record_id = operation["record_id"]
                     data = operation["data"]
+                    timestamp = operation["timestamp"]
+
+                    # insert the pending_operation in order to pull it
+                    query = f"INSERT INTO pending_operations VALUES (?, ?, ?, ?, ?, ?);"
+                    cursor.execute(
+                        query,
+                        [
+                            pending_operation_id,
+                            table_name,
+                            operation_type,
+                            record_id,
+                            data,
+                            timestamp,
+                        ],
+                    )
 
                     if operation_type == "insert":
                         columns = ", ".join(data.keys())
@@ -240,6 +254,46 @@ def sync_pending_operations(request: Request):
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST,
     )
+
+
+@api_view(["GET"])
+def get_pending_operations(_: Request, username: str):
+    db_path = default_storage.path(f"{username}.db")
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM pending_operations")
+
+            # Fetch column names
+            columns = [column[0] for column in cursor.description]
+
+            # Convert tuples to dictionaries
+            pending_operations = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        return Response(
+            {
+                "operations": pending_operations,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+        return Response(
+            {
+                "error": str(e),
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+class PendingOperationListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = PendingOperationSerializer
+
+
+class PendingOperationDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = PendingOperationSerializer
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
