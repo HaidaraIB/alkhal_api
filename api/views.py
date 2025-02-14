@@ -210,7 +210,7 @@ def sync_pending_operations(request: Request):
 
                     trigger_name = f"log_{operation_type}_{table_name}"
                     cursor.execute(
-                        f"SELECT sql FROM sqlite_schema WHERE type = 'trigger' AND name = '{trigger_name}';"
+                        f"SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = '{trigger_name}';"
                     )
                     trigger_definition = cursor.fetchone()
                     cursor.execute(f"DROP TRIGGER IF EXISTS {trigger_name}")
