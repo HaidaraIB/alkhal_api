@@ -266,20 +266,23 @@ def sync_pending_operations(request: Request):
 
 
 @api_view(["GET"])
-def get_pending_operations(_: Request, username: str):
+def get_pending_operations(
+    _: Request, username: str, last_pending_operation_timestamp: int
+):
     db_path = default_storage.path(f"{username}.db")
     try:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM pending_operations")
+            cursor.execute(
+                "SELECT * FROM pending_operations WHERE timestamp > ?",
+                [last_pending_operation_timestamp],
+            )
 
             # Fetch column names
             columns = [column[0] for column in cursor.description]
 
             # Convert tuples to dictionaries
             pending_operations = [dict(zip(columns, row)) for row in cursor.fetchall()]
-
-            cursor.execute("DELETE FROM pending_operations")
 
         return Response(
             {
