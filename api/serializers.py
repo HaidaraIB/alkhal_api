@@ -30,6 +30,7 @@ class PendingOperationSerializer(serializers.Serializer):
     record_id = serializers.IntegerField()
     data = serializers.DictField()
     timestamp = serializers.IntegerField()
+    uuid = serializers.CharField()
 
 
 class DbUploadSerializer(serializers.Serializer):

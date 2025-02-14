@@ -271,9 +271,10 @@ def sync_pending_operations(request: Request):
             )
 
         except Exception as e:
+            import traceback
             return Response(
                 {
-                    "error": str(e),
+                    "error": traceback.format_exc(),
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
