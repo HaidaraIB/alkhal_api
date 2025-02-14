@@ -206,14 +206,21 @@ def sync_pending_operations(request: Request):
                         query,
                         [
                             pending_operation_id,
-                            table_name,
                             operation_type,
+                            table_name,
                             record_id,
-                            data,
+                            str(data),
                             timestamp,
                         ],
                     )
 
+                    trigger_name = f"log_{operation_type}_{table_name}"
+                    cursor.execute(
+                        f"SELECT sql FROM sqlite_schema WHERE type = 'trigger' AND name = '{trigger_name}';"
+                    )
+                    trigger_definition = cursor.fetchone()
+                    cursor.execute(f"DROP TRIGGER IF EXISTS {trigger_name}")
+                    conn.commit()
                     if operation_type == "insert":
                         columns = ", ".join(data.keys())
                         values = ", ".join([f"'{v}'" for v in data.values()])
@@ -232,6 +239,8 @@ def sync_pending_operations(request: Request):
                     elif operation_type == "delete":
                         query = f"DELETE FROM {table_name} WHERE id = {record_id};"
                         cursor.execute(query)
+                    if trigger_definition:
+                        cursor.execute(trigger_definition[0])
 
                 conn.commit()
 
