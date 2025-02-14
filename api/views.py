@@ -193,25 +193,19 @@ def sync_pending_operations(request: Request):
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
                 for operation in pending_operations:
-                    pending_operation_id = operation["id"]
-                    table_name = operation["table_name"]
                     operation_type = operation["operation"]
+                    table_name = operation["table_name"]
                     record_id = operation["record_id"]
                     data = operation["data"]
                     timestamp = operation["timestamp"]
 
                     # insert the pending_operation in order to pull it
-                    query = f"INSERT INTO pending_operations VALUES (?, ?, ?, ?, ?, ?);"
                     cursor.execute(
-                        query,
-                        [
-                            pending_operation_id,
-                            operation_type,
-                            table_name,
-                            record_id,
-                            str(data),
-                            timestamp,
-                        ],
+                        (
+                            "INSERT INTO pending_operations(operation, table_name, record_id, data, timestamp)"
+                            "VALUES (?, ?, ?, ?, ?);"
+                        ),
+                        [operation_type, table_name, record_id, str(data), timestamp],
                     )
 
                     trigger_name = f"log_{operation_type}_{table_name}"
@@ -224,21 +218,20 @@ def sync_pending_operations(request: Request):
                     if operation_type == "insert":
                         columns = ", ".join(data.keys())
                         values = ", ".join([f"'{v}'" for v in data.values()])
-                        query = (
+                        cursor.execute(
                             f"INSERT INTO {table_name} ({columns}) VALUES ({values});"
                         )
-                        cursor.execute(query)
 
                     elif operation_type == "update":
                         updates = ", ".join([f"{k} = '{v}'" for k, v in data.items()])
-                        query = (
+                        cursor.execute(
                             f"UPDATE {table_name} SET {updates} WHERE id = {record_id};"
                         )
-                        cursor.execute(query)
 
                     elif operation_type == "delete":
-                        query = f"DELETE FROM {table_name} WHERE id = {record_id};"
-                        cursor.execute(query)
+                        cursor.execute(
+                            f"DELETE FROM {table_name} WHERE id = {record_id};"
+                        )
                     if trigger_definition:
                         cursor.execute(trigger_definition[0])
 
