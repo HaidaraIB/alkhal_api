@@ -198,14 +198,38 @@ def sync_pending_operations(request: Request):
                     record_id = operation["record_id"]
                     data = operation["data"]
                     timestamp = operation["timestamp"]
+                    uuid = operation["uuid"]
+
+                    # create pending_operations table to insert into if not exists
+                    cursor.execute(
+                        """
+                            CREATE TABLE IF NOT EXISTS pending_operations (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                operation TEXT, -- 'insert', 'update', 'delete'
+                                table_name TEXT, -- The table being modified (e.g., 'category', 'item', etc.)
+                                record_id INTEGER, -- The ID of the record being modified
+                                data TEXT, -- JSON representation of the data
+                                timestamp INTEGER, -- Timestamp of the operation
+                                uuid TEXT -- Unique id to distinguish users
+                            );
+                        """
+                    )
+                    conn.commit()
 
                     # insert the pending_operation in order to pull it
                     cursor.execute(
                         (
-                            "INSERT INTO pending_operations(operation, table_name, record_id, data, timestamp)"
-                            "VALUES (?, ?, ?, ?, ?);"
+                            "INSERT INTO pending_operations(operation, table_name, record_id, data, timestamp, uuid)"
+                            "VALUES (?, ?, ?, ?, ?, ?);"
                         ),
-                        [operation_type, table_name, record_id, str(data), timestamp],
+                        [
+                            operation_type,
+                            table_name,
+                            record_id,
+                            str(data),
+                            timestamp,
+                            uuid,
+                        ],
                     )
 
                     trigger_name = f"log_{operation_type}_{table_name}"
@@ -213,8 +237,10 @@ def sync_pending_operations(request: Request):
                         f"SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = '{trigger_name}';"
                     )
                     trigger_definition = cursor.fetchone()
+                    
                     cursor.execute(f"DROP TRIGGER IF EXISTS {trigger_name}")
                     conn.commit()
+
                     if operation_type == "insert":
                         columns = ", ".join(data.keys())
                         values = ", ".join([f"'{v}'" for v in data.values()])
@@ -260,15 +286,18 @@ def sync_pending_operations(request: Request):
 
 @api_view(["GET"])
 def get_pending_operations(
-    _: Request, username: str, last_pending_operation_timestamp: int
+    _: Request,
+    username: str,
+    last_pending_operation_timestamp: int,
+    my_uuid: str,
 ):
     db_path = default_storage.path(f"{username}.db")
     try:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM pending_operations WHERE timestamp > ?",
-                [last_pending_operation_timestamp],
+                "SELECT * FROM pending_operations WHERE timestamp > ? AND uuid != ?",
+                [last_pending_operation_timestamp, my_uuid],
             )
 
             # Fetch column names

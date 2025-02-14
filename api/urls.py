@@ -33,7 +33,7 @@ urlpatterns = [
         name="sync-pending-operations",
     ),
     path(
-        "getPendingOperations/<username>/<last_pending_operation_timestamp>/",
+        "getPendingOperations/<username>/<last_pending_operation_timestamp>/<my_uuid>/",
         get_pending_operations,
         name="get-pending-operations",
     ),
