@@ -22,6 +22,7 @@ from api.serializers import (
 from base.models import User, Category, Item, ItemHistory, Transaction, TransactionItem
 import sqlite3
 import os
+import json
 
 
 @api_view(["POST"])
@@ -226,7 +227,7 @@ def sync_pending_operations(request: Request):
                             operation_type,
                             table_name,
                             record_id,
-                            str(data),
+                            json.dumps(data),
                             timestamp,
                             uuid,
                         ],
@@ -245,18 +246,18 @@ def sync_pending_operations(request: Request):
                         columns = ", ".join(data.keys())
                         values = ", ".join([f"'{v}'" for v in data.values()])
                         cursor.execute(
-                            f"INSERT INTO {table_name} ({columns}) VALUES ({values});"
+                            f"INSERT INTO '{table_name}' ({columns}) VALUES ({values});"
                         )
 
                     elif operation_type == "update":
                         updates = ", ".join([f"{k} = '{v}'" for k, v in data.items()])
                         cursor.execute(
-                            f"UPDATE {table_name} SET {updates} WHERE id = {record_id};"
+                            f"UPDATE '{table_name}' SET {updates} WHERE id = {record_id};"
                         )
 
                     elif operation_type == "delete":
                         cursor.execute(
-                            f"DELETE FROM {table_name} WHERE id = {record_id};"
+                            f"DELETE FROM '{table_name}' WHERE id = {record_id};"
                         )
                     if trigger_definition:
                         cursor.execute(trigger_definition[0])
