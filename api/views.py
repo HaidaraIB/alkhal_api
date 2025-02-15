@@ -289,7 +289,7 @@ def sync_pending_operations(request: Request):
 def get_pending_operations(
     _: Request,
     username: str,
-    last_pending_operation_timestamp: int,
+    last_pending_operation_id: int,
     my_uuid: str,
 ):
     db_path = default_storage.path(f"{username}.db")
@@ -297,8 +297,8 @@ def get_pending_operations(
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM pending_operations WHERE timestamp > ? AND uuid != ?",
-                [last_pending_operation_timestamp, my_uuid],
+                "SELECT * FROM pending_operations WHERE id > ? AND uuid != ?",
+                [last_pending_operation_id, my_uuid],
             )
 
             # Fetch column names
